@@ -183,7 +183,7 @@ int main(int argc, char** argv)
             ros_acml::isReached myReached;
             myReached.Reached = false;
             reach_pub.publish(myReached);
-            printf("%d\n",myReached.Reached);
+            
         }
             
         else
