@@ -8,7 +8,13 @@
 
 #define PI 3.141592
 #define StopBand 0.04    //0.04
+#define StopBand_Narrow 0.04
+#define StopBand_Wide 1
 #define StopBandAngle 0.2
+
+#define NOTYET 0
+#define CLOSE 1
+#define ARRIVE 2
 
 //sub
 ros_acml::acml_goalConstPtr robot_goal;     //5_17
@@ -16,9 +22,9 @@ geometry_msgs::TwistConstPtr robot_pose;
 
 //global var - gain
 // 0.8 , 1.5 ,-1.4
-float k_rho = 0.25;  //0.3
-float k_alpha = 1.45;  //1.45
-float k_beta = -1.0;   //-1.3
+float k_rho = 0.35;  //0.3
+float k_alpha = 2;  //1.45
+float k_beta = -1.5;   //-1.3
 
 //global var - cmd
 float v = 0.0;
@@ -51,9 +57,16 @@ void goalCallback(const ros_acml::acml_goalConstPtr &goal)  //5_17
   robot_goal = goal;
 }
 
-bool hasReachedGoal(void)
+int8_t hasReachedGoal(void)
 {
-    return sqrtf(delta_x*delta_x + delta_y*delta_y) <= StopBand;
+    float result = sqrtf(delta_x*delta_x + delta_y*delta_y);
+    if (result <= StopBand_Narrow)
+        return ARRIVE;
+
+    else if(result <= StopBand_Wide)
+        return CLOSE;
+
+    return NOTYET;
 }
 
 float orientation2theta(void)
@@ -112,7 +125,8 @@ void controller(ros::Publisher reach_pub)
     /*rho-alpha-beta controller*/
     /*tell a_star arrived*/
     ros_acml::isReached myReached;
-    if(hasReachedGoal())
+    int8_t r = hasReachedGoal();
+    if(r>NOTYET)
     {
         /*abort stop*/
         // v = 0;
@@ -120,15 +134,24 @@ void controller(ros::Publisher reach_pub)
         v = k_rho * rho;
         omega = k_alpha * alpha + k_beta * beta;
         /*pub here*/
-        myReached.Reached = true;
-        ROS_INFO("Reached the Goal\n");
+        if(r == CLOSE)
+        {
+            myReached.Reached = CLOSE;
+            ROS_INFO("Close to the Goal\n");
+        }
+        else if(r == ARRIVE)
+        {
+            myReached.Reached = CLOSE;
+            ROS_INFO("Reach to the Goal\n");
+        }
+            
     }
     else
     {
         /*update v omega*/
         v = k_rho * rho;
         omega = k_alpha * alpha + k_beta * beta;
-        myReached.Reached = false;
+        myReached.Reached = NOTYET;
     }
     reach_pub.publish(myReached);
 }
