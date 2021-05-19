@@ -16,9 +16,9 @@ geometry_msgs::TwistConstPtr robot_pose;
 
 //global var - gain
 // 0.8 , 1.5 ,-1.4
-float k_rho = 0.25;  //0.3
-float k_alpha = 1.45;  //1.45
-float k_beta = -1.0;   //-1.3
+float k_rho = 0.5;  //0.3  0.25
+float k_alpha = 1.5;  //1.45   1.45
+float k_beta = -1.4;   //-1.3   -1.0
 
 //global var - cmd
 float v = 0.0;
